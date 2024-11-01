@@ -187,6 +187,37 @@
             user-select: none;
         }
 
+        .daily-rankings {
+            position: sticky;
+            top: 1rem;
+        }
+
+        .position-badge {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .list-group-item:first-child .position-badge {
+            background-color: #ffd700;
+            color: #000;
+        }
+
+        .list-group-item:nth-child(2) .position-badge {
+            background-color: #c0c0c0;
+            color: #000;
+        }
+
+        .list-group-item:nth-child(3) .position-badge {
+            background-color: #cd7f32;
+            color: #fff;
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -283,32 +314,67 @@
                 {{ error }}
             </div>
 
+
+
             <!-- Data Display -->
             <div v-if="!isLoading && !error && initialized" class="row g-4">
-                <div v-for="game in displayedGames" class="col-md-4">
-                    <div class="game-card card">
+                <!-- New Daily Rankings Panel -->
+                <div class="col-md-3">
+                    <div class="card game-card">
                         <div class="card-header">
-                            <h3>{{ game.emoji }} {{ game.game }}</h3>
+                            <h3 class="m-0">📊 Rank · {{ dailyRankings.date }}
                         </div>
-                        <div class="card-body">
-                            <ul class="list-group list-group-flush" v-if="game.posizioni.length">
-                                <li v-for="(item, index) in game.posizioni" 
+                        <div class="card-body p-0">
+                            <div v-if="loadingRankings" class="text-center py-4">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">Loading rankings...</span>
+                                </div>
+                            </div>
+                            <div v-else-if="rankingsError" class="alert alert-danger m-3" role="alert">
+                                {{ rankingsError }}
+                            </div>
+                            <ul v-else class="list-group list-group-flush">
+                                <li v-for="rank in dailyRankings.rankings" :key="rank.name"
                                     class="list-group-item d-flex justify-content-between align-items-center">
                                     <span>
-                                        <a :href="'/players.html?player=' + encodeURIComponent(item.user_name)" class="d-block text-decoration-none mb-2">
-                                            <!-- <span class="medal"></span> -->
-                                            {{ getRankEmoji(index) }} {{ item.user_name }}
-                                        </a>
+                                        <span class="position-badge me-2">{{ rank.pos }}</span>
+                                        {{ rank.name }}
                                     </span>
-                                    <span class="badge bg-primary">{{ processTries(game.game, item.tries) }}</span>
+                                    <span class="badge text-primary rounded-pill">{{ rank.points }} pts</span>
                                 </li>
                             </ul>
-                            <div v-else class="empty-state">
-                                <p>No data available for this game</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="row g-4">
+                        <div v-for="game in displayedGames" class="col-md-4">
+                            <div class="game-card card">
+                                <div class="card-header">
+                                    <h3>{{ game.emoji }} {{ game.game }}</h3>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush" v-if="game.posizioni.length">
+                                        <li v-for="(item, index) in game.posizioni" 
+                                            class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>
+                                                <a :href="'/players.html?player=' + encodeURIComponent(item.user_name)" class="d-block text-decoration-none mb-2">
+                                                    <!-- <span class="medal"></span> -->
+                                                    {{ getRankEmoji(index) }} {{ item.user_name }}
+                                                </a>
+                                            </span>
+                                            <span class="badge bg-primary">{{ processTries(game.game, item.tries) }}</span>
+                                        </li>
+                                    </ul>
+                                    <div v-else class="empty-state">
+                                        <p>No data available for this game</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -332,7 +398,13 @@
                     error: null,
                     today: new Date().toISOString().split('T')[0],
                     hideEmptyGames: true,
-                    initialized: false
+                    initialized: false,
+                    dailyRankings: {
+                        date: '',
+                        rankings: []
+                    },
+                    loadingRankings: false,
+                    rankingsError: null
                 };
             },
             computed: {
@@ -445,11 +517,29 @@
                         this.isLoading = false;
                         this.initialized = true;
                     }
+                },
+
+                async fetchDailyRankings() {
+                    this.loadingRankings = true;
+                    this.rankingsError = null;
+                    try {
+                        const response = await fetch(`https://trifase.online:8000/dailyranking/?day=${this.selectedDate}`);
+                        if (!response.ok) {
+                        throw new Error('Failed to fetch rankings');
+                        }
+                        this.dailyRankings = await response.json();
+                    } catch (error) {
+                        this.rankingsError = 'Error loading daily rankings: ' + error.message;
+                    } finally {
+                        this.loadingRankings = false;
+                    }
                 }
+
 
             },
             mounted() {
                 this.fetchData();
+                this.fetchDailyRankings();
             }
         }).mount("#app");
     </script>
