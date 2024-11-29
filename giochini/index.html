@@ -352,14 +352,25 @@
                                 {{ heatmapError }}
                             </div>
                             <div v-else class="d-flex flex-column">
-                                <div class="d-flex justify-content-center mt-2">
+                                <!-- New month labels row -->
+                                <div class="d-flex justify-content-center mb-1">
                                     <div 
-                                        v-for="(week, weekIndex) in generateHeatmapGrid()" 
-                                        :key="weekIndex" 
+                                        v-for="(month, index) in getMonthLabels()"
+                                        :key="index"
+                                        class="text-muted small"
+                                        style="width: 52px;"
+                                    >
+                                        {{ month }}
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-center mt-2">
+                                    <div
+                                        v-for="(week, weekIndex) in generateHeatmapGrid()"
+                                        :key="weekIndex"
                                         class="d-flex flex-column"
                                     >
-                                        <div 
-                                            v-for="(day, dayIndex) in week" 
+                                        <div
+                                            v-for="(day, dayIndex) in week"
                                             :key="`${weekIndex}-${dayIndex}`"
                                             class="game-heatmap-cell"
                                             :class="getHeatmapColorIntensity(day.count)"
@@ -367,13 +378,14 @@
                                         ></div>
                                     </div>
                                 </div>
-                                
+                               
                                 <div class="d-flex justify-content-between mt-2">
-                                    <small class="text-muted">Less</small>
+                                    
                                     <div class="d-flex align-items-center">
+                                        <small class="text-muted me-2">Less</small>
                                         <div class="d-flex me-2">
-                                            <div 
-                                                v-for="(colorClass, index) in ['blue-2', 'blue-3', 'blue-4', 'blue-5']" 
+                                            <div
+                                                v-for="(colorClass, index) in ['blue-2', 'blue-3', 'blue-4', 'blue-5']"
                                                 :key="index"
                                                 class="me-1"
                                                 :style="{
@@ -674,6 +686,45 @@
                     }
 
                     return grid.reverse();
+                },
+
+                getMonthLabels() {
+                    // Get the grid first to ensure we have the same width
+                    const grid = this.generateHeatmapGrid();
+                    const monthAbbreviations = [
+                        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                    ];
+
+                    // Calculate the number of weeks in the grid
+                    const totalCells = grid.reduce((sum, week) => sum + week.length, 0);
+                    
+                    // Create month labels array
+                    const labels = new Array(totalCells).fill('');
+                    
+                    // Distribute month labels across the grid
+                    let currentMonth = null;
+                    let lastMonthIndex = -1;
+                    
+                    grid.forEach((week, weekIndex) => {
+                        week.forEach((day, dayIndex) => {
+                            if (day.date) {
+                                const month = new Date(day.date).getMonth();
+                                if (month !== currentMonth) {
+                                    currentMonth = month;
+                                    // Only add if it's a different month
+                                    if (lastMonthIndex === -1 || weekIndex * 7 + dayIndex > lastMonthIndex + 14) {
+                                        labels[weekIndex * 7 + dayIndex] = monthAbbreviations[month];
+                                        lastMonthIndex = weekIndex * 7 + dayIndex;
+                                    }
+                                }
+                            }
+                        });
+                    });
+                    console.log(labels)
+                    let filteredArr = labels.filter(item => item !== "");
+
+                    return filteredArr;
                 },
 
                 getHeatmapColorIntensity(count) {
