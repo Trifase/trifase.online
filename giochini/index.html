@@ -439,7 +439,7 @@
                         <div v-for="game in displayedGames" class="col-md-4">
                             <div class="game-card card">
                                 <div class="card-header">
-                                    <h3>{{ game.emoji }} {{ game.game }}</h3>
+                                    <span><span class="h5">{{ game.emoji }} {{ game.game }}</span> <span style="color: #999">#{{ game.game_day }}</span></span>
                                 </div>
                                 <div class="card-body">
                                     <ul class="list-group list-group-flush" v-if="game.posizioni.length">
@@ -565,7 +565,7 @@
                     if (game === "Reversle") {
                         return `${(tries / 100).toFixed(2)}s`;
                     }
-                    if (["Murdle", "Queens", "Tango", "Crossclimb"].includes(game)) {
+                    if (["Murdle", "Queens", "Tango", "Crossclimb", "Zip"].includes(game)) {
                         let timeStr = tries.toString();
                         // Ensure the string is at least 3 characters long
                         while (timeStr.length < 3) {
@@ -592,7 +592,7 @@
                     this.isLoading = true;
                     this.error = null;
                     try {
-                        let url = `https://trifase.online:8000/classifica/?day=${this.selectedDate}`;
+                        let url = `/api/classifica/?day=${this.selectedDate}`;
                         if (this.selectedGame) {
                             url += `&game=${this.selectedGame}`;
                         }
@@ -621,7 +621,7 @@
                     this.loadingRankings = true;
                     this.rankingsError = null;
                     try {
-                        const response = await fetch(`https://trifase.online:8000/dailyranking/?day=${this.selectedDate}`);
+                        const response = await fetch(`/api/dailyranking/?day=${this.selectedDate}`);
                         if (!response.ok) {
                         throw new Error('Failed to fetch rankings');
                         }
@@ -637,7 +637,7 @@
                     this.heatmapLoading = true;
                     this.heatmapError = null;
                     try {
-                        const response = await fetch('https://trifase.online:8000/game-stats');
+                        const response = await fetch('/api/game-stats/');
                         if (!response.ok) {
                             throw new Error('Failed to fetch heatmap data');
                         }

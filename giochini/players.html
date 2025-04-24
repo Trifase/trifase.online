@@ -243,7 +243,7 @@
                     try {
                         console.log('Fetching stats for', player);
                         let urlEncodedPlayer = encodeURIComponent(player);
-                        let urlEncodedUrl = 'https://trifase.online:8000/stats/?player=' + urlEncodedPlayer;
+                        let urlEncodedUrl = '/api/stats/?player=' + urlEncodedPlayer;
                         console.log('Fetching', urlEncodedUrl);
                         const response = await fetch(urlEncodedUrl);
                         if (!response.ok) throw new Error('Failed to fetch stats');
