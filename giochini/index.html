@@ -576,6 +576,15 @@
                         if (minutes === '') minutes = '0';
                         return `${minutes}:${seconds}`;
                     }
+                    if (game === 'Snoop') {
+                        // from 23383 to 02:23.83
+                        // pad the left with zeros so it can be 0:00.00
+                        let triesStr = String(tries).padStart(6, '0');
+                        let hours = triesStr.substring(0, 2);
+                        let minutes = triesStr.substring(2, 4);
+                        let seconds = triesStr.substring(4, 6);
+                        tries = `${hours}:${minutes}.${seconds}`;
+                    }
                     return tries;
                 },
 
